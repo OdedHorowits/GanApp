@@ -160,6 +160,7 @@ const loginView=()=>`<h2 style="margin:6px 0 0">כניסה לחשבון קיים
   <div class="priv">אין מייל בחשבון? פנה/י למנהל/ת, והוא ישלח לך קישור.</div>`;
 const pendView=()=>`<div class="card" style="margin-top:12px"><h2 style="margin:0 0 6px">תודה${me&&me.name?", "+esc(me.name):""}!</h2><p>הבקשה שלך נשלחה למנהל/ת. ברגע שהיא תאשר, תוכל/י לראות בקשות ולהסיע.</p><button class="btn block" data-a="retry">בדיקה מחדש</button></div>`;
 
+const intl=p=>String(p).startsWith("0")?"972"+String(p).slice(1):String(p).replace("+","");
 const uq=s=>String(s||"").replace(/\D/g,"").replace(/^972/,"0");
 const ST={active:["פעיל","ok"],pending:["ממתין לאישור","warn"],blocked:["חסום",""]};
 function userCard(u){
@@ -170,7 +171,7 @@ function userCard(u){
   ${u.email?`<div class="meta">${esc(u.email)}</div>`:""}
   <div class="act">${u.status==="pending"?`<button class="btn" data-uap="${u.uid}">אישור</button>`:""}<button class="btn ghost" data-ued="${u.uid}">עריכה</button><button class="btn ghost" data-ulk="${u.uid}">קישור כניסה</button>${self?"":`<button class="btn ghost" data-udel="${u.uid}">הסרה</button>`}</div>${st.u.link&&st.u.link.uid===u.uid?linkBox(u):""}</article>`}
 function linkBox(u){
-  const url=st.u.link.url,ph=u.phone.startsWith("0")?"972"+u.phone.slice(1):u.phone.replace("+","");
+  const url=st.u.link.url,ph=intl(u.phone);
   const t=`היי ${u.name}, זה הקישור האישי שלך לאפליקציית נוסעים ביחד: ${url}\nאל תעביר/י אותו לאחרים.`;
   return `<div class="note"><div style="margin-bottom:6px">הקישור נותן גישה לחשבון של ${esc(u.name)}, אז כדאי לשלוח אותו רק אליו.</div><input type="text" readonly value="${esc(url)}" onfocus="this.select()"><div class="act"><a class="btn" href="https://wa.me/${ph}?text=${encodeURIComponent(t)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">שליחה בוואטסאפ</a></div></div>`}
 function editCard(u){
@@ -221,7 +222,8 @@ document.addEventListener("click",async e=>{
   if(d.a==="logout"){if(!confirm("להתנתק? כדי להיכנס שוב תצטרך את הקישור האישי שלך (אפשר לקבל אותו במייל או מהמנהל/ת)."))return;store.del(KN);KEY="";me=null;view("reg");return}
   if(d.remind){const r=data.requests.find(x=>x.id==d.remind);
     const t=`היי ${r.taken}, תזכורת קטנה: ${label(r.date)} ב-${r.time} (${r.dir}) ${r.garden}, ${r.area}, ${r.kids} ילדים. ${r.note?r.note+". ":""}תודה רבה על העזרה!`;
-    window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank","noopener");return}
+    if(!r.takenPhone)toast("לא נמצא טלפון למתנדב, בחר/י אותו ידנית בוואטסאפ");
+    window.open("https://wa.me/"+(r.takenPhone?intl(r.takenPhone):"")+"?text="+encodeURIComponent(t),"_blank","noopener");return}
   if(d.ug){st.u.g=d.ug;render();return}
   if(d.us){st.u.s=d.us;render();return}
   if(d.ued){st.u.edit=d.ued;render();return}
