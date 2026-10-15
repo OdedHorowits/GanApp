@@ -61,6 +61,7 @@ nav svg{display:block;margin:0 auto 2px}
 .empty{text-align:center;color:var(--mute);padding:30px 10px}
 .toast{position:fixed;inset-inline:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;text-align:center;z-index:9;max-width:600px;margin:auto}
 .demo{font-size:12px;color:var(--mute);text-align:center;margin:14px 0}
+a{color:var(--pri)}
 :focus-visible{outline:3px solid var(--pri);outline-offset:2px}
 </style>
 </head>
@@ -69,9 +70,9 @@ nav svg{display:block;margin:0 auto 2px}
 <main id="app"></main>
 <nav id="nav"></nav>
 <div id="toast" class="toast" hidden></div>
+<script src="config.js"></script>
 <script>
-/* >>> הדבק כאן את כתובת ה-Web App שלך (מסתיימת ב-/exec) <<< */
-const API="https://script.google.com/macros/s/AKfycbx2LarAAXxQKLu5OFzQbYd1jpQqyYfJUQRdCaVDZrZiX2xMOoVYCGjKaak0SACpOq3u/exec";
+const API_URL=typeof API!=="undefined"?API:"";   // מוגדר בקובץ config.js
 
 const GARDENS=["כל הגנים","גן שקד","גן תמר","גן רימון","גן זית"];
 const $=s=>document.querySelector(s);
@@ -80,10 +81,10 @@ const KN="ganrides-key";
 const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
 let KEY=new URLSearchParams(location.search).get("key")||store.get(KN)||"";
 if(KEY)store.set(KN,KEY);
-let me=null,data={requests:[],offers:[]},st={tab:"req",garden:"כל הגנים",open:false,view:"load"};
+let me=null,data={requests:[],offers:[],users:[]},st={u:{q:"",g:"כל הגנים",s:"all",edit:null},tab:"req",garden:"כל הגנים",open:false,view:"load"};
 const isC=()=>me&&me.role==="coordinator";
 
-const call=async b=>(await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key:KEY,...b})})).json();
+const call=async b=>(await fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key:KEY,...b})})).json();
 const iso=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toLocaleDateString("sv-SE")};
 const label=s=>{const dt=new Date(s+"T00:00"),i=Math.round((dt-new Date(iso(0)+"T00:00"))/864e5);return i===0?"היום":i===1?"מחר":dt.toLocaleDateString("he-IL",{weekday:"short",day:"numeric",month:"numeric"})};
 const T=v=>v===true||String(v).toUpperCase()==="TRUE";
@@ -91,13 +92,13 @@ function toast(t){const e=$("#toast");e.textContent=t;e.hidden=false;clearTimeou
 const view=v=>{st.view=v;render()};
 
 async function load(){
-  if(!API.startsWith("http"))return view("setup");
+  if(!API_URL.startsWith("http"))return view("setup");
   if(!KEY)return view("reg");
   try{
-    const r=await(await fetch(`${API}?key=${encodeURIComponent(KEY)}`)).json();
+    const r=await(await fetch(`${API_URL}?key=${encodeURIComponent(KEY)}`)).json();
     if(r.pending){me=r.me;return view("pending")}
     if(r.error){store.del(KN);KEY="";return view("reg")}
-    me=r.me;data.offers=r.offers||[];
+    me=r.me;data.offers=r.offers||[];data.users=r.users||[];
     data.requests=(r.requests||[]).map(x=>({...x,date:String(x.date).slice(0,10),time:String(x.time).slice(0,5),hide:T(x.hide_details),urgent:T(x.urgent),taken:x.taken||null}))
       .filter(x=>x.date>=iso(0)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
     view("app");
@@ -139,29 +140,70 @@ function tabNew(){
   <div class="two"><div><label for="area">מאיפה / לאן</label><input type="text" id="area" placeholder="שכונה או רחוב"></div><div><label for="kids">כמה ילדים</label><input type="number" id="kids" min="1" max="6" value="1"></div></div>
   <label for="reason">מה הסיבה (לא חובה)</label><select id="reason">${o(["לא רוצה לפרט","מילואים","מחלה","ילד עם צרכים מיוחדים","אחר"])}</select>
   <label for="nt">הערה למסיע</label><textarea id="nt" rows="2" placeholder="למשל: צריך מושב בוסטר"></textarea>
-  <label class="check"><input type="checkbox" id="hide" checked><span>להציג בלי שם וסיבה. רק הרכזת רואה פרטים.</span></label>
+  <label class="check"><input type="checkbox" id="hide" checked><span>להציג בלי שם וסיבה. רק המנהל/ת רואה פרטים.</span></label>
   <label class="check"><input type="checkbox" id="urg"><span>דחוף: צריך הסעה היום</span></label>
   <button class="btn block" data-a="send">שליחת בקשה</button>`}
 
-const regView=()=>`<h2 style="margin:6px 0 0">הצטרפות לקהילה</h2><p class="meta">ההרשמה פתוחה להורי הגנים בלבד. הפרטים שלך נראים רק לרכזת.</p>
+const regView=()=>`<h2 style="margin:6px 0 0">הצטרפות לקהילה</h2><p class="meta">ההרשמה פתוחה להורי הגנים בלבד. הפרטים שלך נראים רק למנהל/ת.</p>
   <label for="rn">שם מלא</label><input type="text" id="rn" autocomplete="name">
   <label for="rp">טלפון</label><input type="text" id="rp" inputmode="tel" autocomplete="tel">
-  <label for="re">מייל (לא חובה, לתזכורות)</label><input type="text" id="re" inputmode="email" autocomplete="email">
+  <label for="re">מייל (מומלץ: לשחזור כניסה ולתזכורות)</label><input type="text" id="re" inputmode="email" autocomplete="email">
   <label for="rc">קוד ההצטרפות של הגן</label><input type="text" id="rc" autocapitalize="characters" autocomplete="off">
   <div class="priv">את הקוד מקבלים מהגננת או מוועד ההורים.</div>
   <label class="check"><input type="checkbox" id="rok"><span>אני מסכים/ה שהשם והטלפון שלי יישמרו וישמשו לתיאום הסעות בלבד.</span></label>
-  <button class="btn block" data-a="reg">הצטרפות</button>`;
-const pendView=()=>`<div class="card" style="margin-top:12px"><h2 style="margin:0 0 6px">תודה${me&&me.name?", "+esc(me.name):""}!</h2><p>הבקשה שלך נשלחה לרכזת. ברגע שהיא תאשר, תוכל/י לראות בקשות ולהסיע.</p><button class="btn block" data-a="retry">בדיקה מחדש</button></div>`;
+  <button class="btn block" data-a="reg">הצטרפות</button>
+  <button class="btn ghost block" data-a="login">כבר נרשמת? קבלת קישור כניסה</button>`;
+const loginView=()=>`<h2 style="margin:6px 0 0">כניסה לחשבון קיים</h2><p class="meta">נשלח קישור כניסה אישי למייל שהזנת בהרשמה.</p>
+  <label for="lp">טלפון</label><input type="text" id="lp" inputmode="tel" autocomplete="tel">
+  <button class="btn block" data-a="recover">שלח לי קישור</button>
+  <button class="btn ghost block" data-a="toreg">חזרה להרשמה</button>
+  <div class="priv">אין מייל בחשבון? פנה/י למנהל/ת, והוא ישלח לך קישור.</div>`;
+const pendView=()=>`<div class="card" style="margin-top:12px"><h2 style="margin:0 0 6px">תודה${me&&me.name?", "+esc(me.name):""}!</h2><p>הבקשה שלך נשלחה למנהל/ת. ברגע שהיא תאשר, תוכל/י לראות בקשות ולהסיע.</p><button class="btn block" data-a="retry">בדיקה מחדש</button></div>`;
+
+const uq=s=>String(s||"").replace(/\D/g,"").replace(/^972/,"0");
+const ST={active:["פעיל","ok"],pending:["ממתין לאישור","warn"],blocked:["חסום",""]};
+function userCard(u){
+  if(st.u.edit===u.uid)return editCard(u);
+  const t=ST[u.status]||[u.status,""],self=u.uid===me.uid;
+  return `<article class="card"><div class="row"><div class="when">${esc(u.name)}</div><span class="tag ${t[1]}">${t[0]}</span></div>
+  <div class="meta"><a href="tel:${esc(u.phone)}">${esc(u.phone)}</a> · ${esc(u.garden||"ללא גן")}${u.role==="coordinator"?" · מנהל/ת":""}</div>
+  ${u.email?`<div class="meta">${esc(u.email)}</div>`:""}
+  <div class="act">${u.status==="pending"?`<button class="btn" data-uap="${u.uid}">אישור</button>`:""}<button class="btn ghost" data-ued="${u.uid}">עריכה</button><button class="btn ghost" data-ulk="${u.uid}">קישור כניסה</button>${self?"":`<button class="btn ghost" data-udel="${u.uid}">הסרה</button>`}</div>${st.u.link&&st.u.link.uid===u.uid?linkBox(u):""}</article>`}
+function linkBox(u){
+  const url=st.u.link.url,ph=u.phone.startsWith("0")?"972"+u.phone.slice(1):u.phone.replace("+","");
+  const t=`היי ${u.name}, זה הקישור האישי שלך לאפליקציית נוסעים ביחד: ${url}\nאל תעביר/י אותו לאחרים.`;
+  return `<div class="note"><div style="margin-bottom:6px">הקישור נותן גישה לחשבון של ${esc(u.name)}, אז כדאי לשלוח אותו רק אליו.</div><input type="text" readonly value="${esc(url)}" onfocus="this.select()"><div class="act"><a class="btn" href="https://wa.me/${ph}?text=${encodeURIComponent(t)}" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">שליחה בוואטסאפ</a></div></div>`}
+function editCard(u){
+  const o=(a,cur)=>a.map(x=>`<option value="${x[0]}" ${x[0]===cur?"selected":""}>${x[1]}</option>`).join("");
+  return `<article class="card"><label for="en">שם</label><input type="text" id="en" value="${esc(u.name)}">
+  <div class="two"><div><label for="ep">טלפון</label><input type="text" id="ep" value="${esc(u.phone)}" inputmode="tel"></div><div><label for="ee">מייל</label><input type="text" id="ee" value="${esc(u.email)}"></div></div>
+  <div class="two"><div><label for="eg">גן</label><select id="eg">${o([["","ללא גן"],...GARDENS.slice(1).map(g=>[g,g])],u.garden||"")}</select></div><div><label for="er">תפקיד</label><select id="er">${o([["parent","הורה"],["coordinator","מנהל/ת"]],u.role)}</select></div></div>
+  <label for="es">סטטוס</label><select id="es">${o([["active","פעיל"],["pending","ממתין לאישור"],["blocked","חסום"]],u.status)}</select>
+  <div class="act"><button class="btn" data-usv="${u.uid}">שמירה</button><button class="btn ghost" data-a="ucancel">ביטול</button></div></article>`}
+function usersList(){
+  const q=st.u.q.trim().toLowerCase(),qd=uq(st.u.q);
+  const L=data.users.filter(u=>(st.u.g==="כל הגנים"||u.garden===st.u.g)&&(st.u.s==="all"||u.status===st.u.s)&&(!q||String(u.name).toLowerCase().includes(q)||(qd.length>=2&&uq(u.phone).includes(qd))))
+    .sort((a,b)=>(a.status==="pending"?0:1)-(b.status==="pending"?0:1)||String(a.name).localeCompare(String(b.name),"he"));
+  return L.length?L.map(userCard).join(""):`<div class="empty">לא נמצאו משתמשים.</div>`}
+function tabUsers(){
+  const pc=data.users.filter(u=>u.status==="pending").length;
+  const S=[["all","הכל"],["pending","ממתינים"+(pc?` (${pc})`:"")],["active","פעילים"],["blocked","חסומים"]];
+  return `<h2 style="margin:6px 0 8px">משתמשים</h2><input type="text" id="uq" placeholder="חיפוש לפי שם או טלפון" value="${esc(st.u.q)}" autocomplete="off">
+  <div class="chips" style="margin-top:8px">${S.map(s=>`<button class="chip" data-us="${s[0]}" aria-pressed="${st.u.s===s[0]}">${s[1]}</button>`).join("")}</div>
+  <div class="chips">${GARDENS.map(g=>`<button class="chip" data-ug="${g}" aria-pressed="${st.u.g===g}">${g}</button>`).join("")}</div>
+  <div id="ulist">${usersList()}</div>`}
 
 function render(){
   const V={load:()=>`<div class="empty">טוען…</div>`,
-   setup:()=>`<div class="card"><b>חסרה כתובת השרת</b><p>ב-index.html, בשורה הראשונה בסקריפט, הדבק/י את כתובת ה-Web App שמסתיימת ב-/exec.</p></div>`,
+   setup:()=>`<div class="card"><b>חסרה כתובת השרת</b><p>צריך ליצור קובץ config.js עם כתובת ה-Web App (שמסתיימת ב-/exec).</p></div>`,
    err:()=>`<div class="card"><b>אין חיבור לשרת</b><p class="meta">בדוק/י את החיבור לאינטרנט.</p><button class="btn block" data-a="retry">נסה שוב</button></div>`,
-   reg:regView,pending:pendView,app:()=>({req:tabReq,off:tabOff,new:tabNew})[st.tab]()+`<p class="demo">${esc(me.name)} · ${esc(me.garden||"רכזת")} · <button class="chip" data-a="logout">יציאה</button></p>`};
+   reg:regView,login:loginView,pending:pendView,app:()=>({req:tabReq,off:tabOff,new:tabNew,usr:tabUsers})[st.tab]()+`<p class="demo">${esc(me.name)} · ${esc(me.garden||"מנהל/ת")} · <button class="chip" data-a="mylink">העתקת קישור אישי</button> <button class="chip" data-a="logout">יציאה</button></p>`};
   $("#app").innerHTML=V[st.view]();
   $("#sub").textContent=st.view==="app"&&me?`שלום ${me.name}`:"הסעות לגן";
   const ic=p=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
   const tabs=[["req","בקשות",ic('<path d="M4 6h16M4 12h16M4 18h10"/>')],["new","בקשה חדשה",ic('<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>')],["off","נוסעים קבוע",ic('<path d="M3 15l2-6h14l2 6v4H3zM7 19v2M17 19v2"/>')]];
+  const pc=data.users.filter(u=>u.status==="pending").length;
+  if(isC())tabs.push(["usr","משתמשים"+(pc?` (${pc})`:""),ic('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M17 11a3 3 0 100-6M21 20c0-2.6-1.6-4.8-4-5.6"/>')]);
   $("#nav").innerHTML=st.view==="app"?tabs.map(t=>`<button data-t="${t[0]}" ${st.tab===t[0]?'aria-current="true"':""}>${t[2]}${t[1]}</button>`).join(""):"";
 }
 
@@ -172,12 +214,31 @@ document.addEventListener("click",async e=>{
   if(d.g){st.garden=d.g;render();return}
   if(d.a==="open"){st.open=!st.open;render();return}
   if(d.a==="retry"){view("load");load();return}
-  if(d.a==="logout"){store.del(KN);KEY="";me=null;view("reg");return}
+  if(d.a==="login"){view("login");return}
+  if(d.a==="toreg"){view("reg");return}
+  if(d.a==="mylink"){const url=location.origin+location.pathname+"?key="+KEY;
+    try{await navigator.clipboard.writeText(url);toast("הקישור הועתק. שמור/י אותו במקום בטוח")}catch(x){prompt("העתק/י את הקישור האישי:",url)}return}
+  if(d.a==="logout"){if(!confirm("להתנתק? כדי להיכנס שוב תצטרך את הקישור האישי שלך (אפשר לקבל אותו במייל או מהמנהל/ת)."))return;store.del(KN);KEY="";me=null;view("reg");return}
   if(d.remind){const r=data.requests.find(x=>x.id==d.remind);
     const t=`היי ${r.taken}, תזכורת קטנה: ${label(r.date)} ב-${r.time} (${r.dir}) ${r.garden}, ${r.area}, ${r.kids} ילדים. ${r.note?r.note+". ":""}תודה רבה על העזרה!`;
     window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank","noopener");return}
+  if(d.ug){st.u.g=d.ug;render();return}
+  if(d.us){st.u.s=d.us;render();return}
+  if(d.ued){st.u.edit=d.ued;render();return}
+  if(d.a==="ucancel"){st.u.edit=null;render();return}
   b.disabled=true;
   try{
+    if(d.a==="recover"){const r=await call({action:"recover",phone:v("lp")});
+      toast(r.error==="not_configured"?"שחזור הכניסה עדיין לא הוגדר. פנה/י למנהל/ת":"אם המספר רשום ויש לו מייל, נשלח אליו קישור. לא הגיע? פנה/י למנהל/ת");b.disabled=false;return}
+    if(d.ulk){const r=await call({action:"user_link",uid:d.ulk});
+      if(r.ok){st.u.link={uid:d.ulk,url:location.origin+location.pathname+"?key="+r.key};render()}else{toast("לא הצלחתי ליצור קישור");b.disabled=false}return}
+    if(d.uap){const r=await call({action:"user_set",uid:d.uap,fields:{status:"active"}});toast(r.ok?"המשתמש אושר":"האישור נכשל");await load();return}
+    if(d.udel){const u=data.users.find(x=>x.uid===d.udel);
+      if(!confirm(`להסיר את ${u.name} מהקהילה? אי אפשר לבטל.`)){b.disabled=false;return}
+      const r=await call({action:"user_delete",uid:d.udel});toast(r.ok?"המשתמש הוסר":"ההסרה נכשלה");await load();return}
+    if(d.usv){const r=await call({action:"user_set",uid:d.usv,fields:{name:v("en"),phone:v("ep"),email:v("ee"),garden:$("#eg").value,role:$("#er").value,status:$("#es").value}});
+      const E={exists:"המספר כבר רשום למשתמש אחר",bad_phone:"מספר הטלפון לא תקין",missing_fields:"חסר שם",self:"אי אפשר להוריד או לחסום את עצמך"};
+      if(r.ok){st.u.edit=null;toast("נשמר");await load()}else{toast(E[r.error]||"השמירה נכשלה");b.disabled=false}return}
     if(d.take){const r=await call({action:"take",id:d.take});toast(r.error==="already_taken"?"מישהו כבר לקח את ההסעה":r.ok?"תודה! הבקשה שובצה אליך":"משהו השתבש");await load();return}
     if(d.un){await call({action:"untake",id:d.un});toast("השיבוץ בוטל");await load();return}
     if(d.a==="send"){
@@ -188,12 +249,13 @@ document.addEventListener("click",async e=>{
       if(!v("rn")||!/^[0-9+\-\s]{9,15}$/.test(v("rp"))){toast("חסר שם או מספר טלפון תקין");b.disabled=false;return}
       if(!$("#rok").checked){toast("צריך לאשר את השימוש במידע");b.disabled=false;return}
       const r=await call({action:"register",name:v("rn"),phone:v("rp"),email:v("re"),code:v("rc")});
-      const err={bad_code:"קוד ההצטרפות שגוי. אפשר לבקש אותו מהגננת או מוועד ההורים",missing_fields:"חסר שם או טלפון תקין",exists:"המספר הזה כבר רשום. פנה/י לרכזת"};
+      const err={bad_phone:"מספר הטלפון לא תקין",bad_code:"קוד ההצטרפות שגוי. אפשר לבקש אותו מהגננת או מוועד ההורים",missing_fields:"חסר שם או טלפון תקין",exists:"המספר הזה כבר רשום. פנה/י למנהל/ת"};
       if(r.error){toast(err[r.error]||"ההרשמה נכשלה");b.disabled=false;return}
       KEY=r.key;store.set(KN,KEY);me={name:v("rn")};view("pending");return}
   }catch(x){toast("אין חיבור לשרת, נסה/י שוב");b.disabled=false}
 });
 
+document.addEventListener("input",e=>{if(e.target.id==="uq"){st.u.q=e.target.value;$("#ulist").innerHTML=usersList()}});
 load();
 if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
