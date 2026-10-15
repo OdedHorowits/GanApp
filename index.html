@@ -153,9 +153,9 @@ const regView=()=>`<h2 style="margin:6px 0 0">הצטרפות לקהילה</h2><p
   <label class="check"><input type="checkbox" id="rok"><span>אני מסכים/ה שהשם והטלפון שלי יישמרו וישמשו לתיאום הסעות בלבד.</span></label>
   <button class="btn block" data-a="reg">הצטרפות</button>
   <button class="btn ghost block" data-a="login">כבר נרשמת? קבלת קישור כניסה</button>`;
-const loginView=()=>`<h2 style="margin:6px 0 0">כניסה לחשבון קיים</h2><p class="meta">נשלח קישור כניסה אישי למייל שהזנת בהרשמה.</p>
-  <label for="lp">טלפון</label><input type="text" id="lp" inputmode="tel" autocomplete="tel">
-  <button class="btn block" data-a="recover">שלח לי קישור</button>
+const loginView=()=>`<h2 style="margin:6px 0 0">כניסה לחשבון קיים</h2><p class="meta">הזנת המספר לא נכנסת אוטומטית: אם המספר רשום ויש לו מייל, נשלח אליו קישור כניסה אישי, וממנו נכנסים לחשבון.</p>
+  <label for="lp">הטלפון שנרשמת איתו</label><input type="text" id="lp" inputmode="tel" autocomplete="tel">
+  <button class="btn block" data-a="recover">שלח קישור כניסה למייל שלי</button>
   <button class="btn ghost block" data-a="toreg">חזרה להרשמה</button>
   <div class="priv">אין מייל בחשבון? פנה/י למנהל/ת, והוא ישלח לך קישור.</div>`;
 const pendView=()=>`<div class="card" style="margin-top:12px"><h2 style="margin:0 0 6px">תודה${me&&me.name?", "+esc(me.name):""}!</h2><p>הבקשה שלך נשלחה למנהל/ת. ברגע שהיא תאשר, תוכל/י לראות בקשות ולהסיע.</p><button class="btn block" data-a="retry">בדיקה מחדש</button></div>`;
