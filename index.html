@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>נוסעים ביחד</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="theme-color" content="#0E6E6A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF3F4;--card:#fff;--ink:#16303A;--mute:#5E7580;--line:#D9E3E6;--pri:#0E6E6A;--pri-ink:#fff;--soft:#DDF0EE;--warn:#B45309;--warn-bg:#FDEBC8;--ok:#2F7D3B;--ok-bg:#DFF1DF;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1C21;--card:#17282E;--ink:#E6F0F2;--mute:#9BB1B8;--line:#274149;--pri:#4FC3BB;--pri-ink:#06201F;--soft:#173A3A;--warn:#F5B35C;--warn-bg:#3D2C12;--ok:#7FD08A;--ok-bg:#16301A;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0F1C21;--card:#17282E;--ink:#E6F0F2;--mute:#9BB1B8;--line:#274149;--pri:#4FC3BB;--pri-ink:#06201F;--soft:#173A3A;--warn:#F5B35C;--warn-bg:#3D2C12;--ok:#7FD08A;--ok-bg:#16301A;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Heebo,system-ui,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+header{padding:18px 16px 8px;max-width:640px;margin:auto}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{font-size:24px;font-weight:800;margin:0;letter-spacing:-.3px}
+.sub{color:var(--mute);font-size:14px;margin:2px 0 0}
+.role{display:flex;background:var(--card);border:1px solid var(--line);border-radius:99px;padding:3px}
+.role button{border:0;background:none;padding:5px 12px;border-radius:99px;font-size:13px;cursor:pointer;color:var(--mute)}
+.role button[aria-pressed=true]{background:var(--pri);color:var(--pri-ink);font-weight:700}
+main{max-width:640px;margin:auto;padding:8px 16px}
+.stats{display:flex;gap:8px;margin:8px 0 12px}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:22px;font-weight:800}
+.stat span{font-size:13px;color:var(--mute)}
+.stat.alert b{color:var(--warn)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:6px 14px;font-size:14px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px}
+.card.urgent{border-inline-start:5px solid var(--warn)}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.when{font-weight:800;font-size:17px}
+.route{margin:6px 0 2px;font-size:15px}
+.meta{color:var(--mute);font-size:14px}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;background:var(--soft);color:var(--pri);margin-inline-end:4px}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.ok{background:var(--ok-bg);color:var(--ok)}
+.act{margin-top:10px;display:flex;gap:8px;align-items:center}
+.btn{border:0;background:var(--pri);color:var(--pri-ink);font-weight:700;padding:10px 18px;border-radius:12px;cursor:pointer;min-height:44px}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink);font-weight:500}
+.btn.block{width:100%;margin-top:6px}
+.note{background:var(--soft);border-radius:10px;padding:8px 10px;font-size:14px;margin-top:8px}
+.priv{font-size:13px;color:var(--mute);margin-top:6px}
+label{display:block;font-weight:700;font-size:14px;margin:14px 0 4px}
+input[type=text],input[type=number],select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:12px;background:var(--card);min-height:44px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.check{display:flex;gap:10px;align-items:flex-start;font-weight:400;margin-top:16px;background:var(--soft);padding:10px;border-radius:12px}
+.check input{margin-top:5px;width:18px;height:18px}
+nav{position:fixed;inset:auto 0 0 0;background:var(--card);border-top:1px solid var(--line);display:flex;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+nav button{flex:1;border:0;background:none;padding:8px 4px;font-size:13px;color:var(--mute);cursor:pointer;border-radius:12px}
+nav button[aria-current=true]{color:var(--pri);font-weight:800;background:var(--soft)}
+nav svg{display:block;margin:0 auto 2px}
+.empty{text-align:center;color:var(--mute);padding:30px 10px}
+.toast{position:fixed;inset-inline:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:12px;text-align:center;z-index:9;max-width:600px;margin:auto}
+.demo{font-size:12px;color:var(--mute);text-align:center;margin:14px 0}
+:focus-visible{outline:3px solid var(--pri);outline-offset:2px}
+</style>
+</head>
+<body>
+<header><div class="top"><div><h1>נוסעים ביחד</h1><p class="sub" id="sub">הסעות לגן</p></div></div></header>
+<main id="app"></main>
+<nav id="nav"></nav>
+<div id="toast" class="toast" hidden></div>
+<script>
+/* >>> הדבק כאן את כתובת ה-Web App שלך (מסתיימת ב-/exec) <<< */
+const API="PASTE_YOUR_WEB_APP_URL_HERE";
+
+const GARDENS=["כל הגנים","גן שקד","גן תמר","גן רימון","גן זית"];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const KN="ganrides-key";
+const store={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}},del:k=>{try{localStorage.removeItem(k)}catch(e){}}};
+let KEY=new URLSearchParams(location.search).get("key")||store.get(KN)||"";
+if(KEY)store.set(KN,KEY);
+let me=null,data={requests:[],offers:[]},st={tab:"req",garden:"כל הגנים",open:false,view:"load"};
+const isC=()=>me&&me.role==="coordinator";
+
+const call=async b=>(await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({key:KEY,...b})})).json();
+const iso=n=>{const d=new Date();d.setDate(d.getDate()+n);return d.toLocaleDateString("sv-SE")};
+const label=s=>{const dt=new Date(s+"T00:00"),i=Math.round((dt-new Date(iso(0)+"T00:00"))/864e5);return i===0?"היום":i===1?"מחר":dt.toLocaleDateString("he-IL",{weekday:"short",day:"numeric",month:"numeric"})};
+const T=v=>v===true||String(v).toUpperCase()==="TRUE";
+function toast(t){const e=$("#toast");e.textContent=t;e.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>e.hidden=true,2600)}
+const view=v=>{st.view=v;render()};
+
+async function load(){
+  if(!API.startsWith("http"))return view("setup");
+  if(!KEY)return view("reg");
+  try{
+    const r=await(await fetch(`${API}?key=${encodeURIComponent(KEY)}`)).json();
+    if(r.pending){me=r.me;return view("pending")}
+    if(r.error){store.del(KN);KEY="";return view("reg")}
+    me=r.me;data.offers=r.offers||[];
+    data.requests=(r.requests||[]).map(x=>({...x,date:String(x.date).slice(0,10),time:String(x.time).slice(0,5),hide:T(x.hide_details),urgent:T(x.urgent),taken:x.taken||null}))
+      .filter(x=>x.date>=iso(0)).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+    view("app");
+  }catch(e){view("err")}
+}
+
+function reqCard(r){
+  const mine=r.taken===me.name;
+  const status=r.taken?`<span class="tag ok">${mine?"אתה לוקח":"שובץ: "+esc(r.taken)}</span>`:`<span class="tag warn">מחכה למתנדב</span>`;
+  const act=r.taken?(mine?`<button class="btn ghost" data-un="${r.id}">ביטול</button>`:""):`<button class="btn" data-take="${r.id}">אני לוקח/ת</button>`;
+  const rem=isC()&&r.taken?`<button class="btn ghost" data-remind="${r.id}">שלח תזכורת בוואטסאפ</button>`:"";
+  return `<article class="card ${r.urgent&&!r.taken?"urgent":""}">
+    <div class="row"><div class="when">${label(r.date)} · ${esc(r.time)}</div>${status}</div>
+    <div class="route"><span class="tag">${esc(r.dir)}</span>${esc(r.garden)} · ${esc(r.area)}</div>
+    <div class="meta">${esc(r.kids)} ילדים · ${esc(r.who)}${(isC()||r.who===me.name)&&r.reason?" · "+esc(r.reason):""}</div>
+    ${r.note?`<div class="note">${esc(r.note)}</div>`:""}
+    ${r.hide&&isC()?`<div class="priv">מוצגת להורים בלי שם וסיבה</div>`:""}
+    <div class="act">${act}${rem}</div></article>`}
+
+const chips=()=>`<div class="chips">${GARDENS.map(g=>`<button class="chip" data-g="${g}" aria-pressed="${st.garden===g}">${g}</button>`).join("")}`;
+const gOk=x=>st.garden==="כל הגנים"||x.garden===st.garden;
+
+function tabReq(){
+  const open=data.requests.filter(r=>!r.taken),urg=open.filter(r=>r.urgent&&r.date===iso(0)).length;
+  const list=data.requests.filter(r=>gOk(r)&&(!st.open||!r.taken));
+  return `<div class="stats"><div class="stat alert"><b>${urg}</b><span>דחופות להיום</span></div><div class="stat"><b>${open.length}</b><span>מחכות למתנדב</span></div><div class="stat"><b>${data.requests.length-open.length}</b><span>שובצו</span></div></div>
+  ${chips()}<button class="chip" data-a="open" aria-pressed="${st.open}">פתוחות בלבד</button></div>
+  ${list.length?list.map(reqCard).join(""):`<div class="empty">אין בקשות להצגה.<br>כשמישהו צריך הסעה, זה יופיע כאן.</div>`}`}
+
+function tabOff(){
+  const l=data.offers.filter(gOk);
+  return chips()+`</div>`+(l.map(o=>`<article class="card"><div class="row"><div class="when">${esc(o.who)}</div><span class="tag ok">${esc(o.seats)} מקומות</span></div><div class="route"><span class="tag">${esc(o.dir)}</span>${esc(o.garden)} · ${esc(o.area)}</div><div class="meta">ימים: ${esc(o.days)}</div></article>`).join("")||`<div class="empty">עוד אין הצעות קבועות.</div>`)}
+
+function tabNew(){
+  const o=a=>a.map(x=>`<option>${x}</option>`).join("");
+  return `<h2 style="margin:6px 0 0">בקשת הסעה</h2>
+  <div class="two"><div><label for="day">מתי</label><select id="day">${o(["היום","מחר","מחרתיים"])}</select></div><div><label for="time">שעה</label><select id="time">${o(["07:45","08:00","13:30","16:00"])}</select></div></div>
+  <div class="two"><div><label for="dir">כיוון</label><select id="dir">${o(["הלוך","חזור","הלוך וחזור"])}</select></div><div><label for="garden">גן</label><select id="garden">${o(GARDENS.slice(1))}</select></div></div>
+  <div class="two"><div><label for="area">מאיפה / לאן</label><input type="text" id="area" placeholder="שכונה או רחוב"></div><div><label for="kids">כמה ילדים</label><input type="number" id="kids" min="1" max="6" value="1"></div></div>
+  <label for="reason">מה הסיבה (לא חובה)</label><select id="reason">${o(["לא רוצה לפרט","מילואים","מחלה","ילד עם צרכים מיוחדים","אחר"])}</select>
+  <label for="nt">הערה למסיע</label><textarea id="nt" rows="2" placeholder="למשל: צריך מושב בוסטר"></textarea>
+  <label class="check"><input type="checkbox" id="hide" checked><span>להציג בלי שם וסיבה. רק הרכזת רואה פרטים.</span></label>
+  <label class="check"><input type="checkbox" id="urg"><span>דחוף: צריך הסעה היום</span></label>
+  <button class="btn block" data-a="send">שליחת בקשה</button>`}
+
+const regView=()=>`<h2 style="margin:6px 0 0">הצטרפות לקהילה</h2><p class="meta">ההרשמה פתוחה להורי הגנים בלבד. הפרטים שלך נראים רק לרכזת.</p>
+  <label for="rn">שם מלא</label><input type="text" id="rn" autocomplete="name">
+  <label for="rp">טלפון</label><input type="text" id="rp" inputmode="tel" autocomplete="tel">
+  <label for="re">מייל (לא חובה, לתזכורות)</label><input type="text" id="re" inputmode="email" autocomplete="email">
+  <label for="rc">קוד ההצטרפות של הגן</label><input type="text" id="rc" autocapitalize="characters" autocomplete="off">
+  <div class="priv">את הקוד מקבלים מהגננת או מוועד ההורים.</div>
+  <label class="check"><input type="checkbox" id="rok"><span>אני מסכים/ה שהשם והטלפון שלי יישמרו וישמשו לתיאום הסעות בלבד.</span></label>
+  <button class="btn block" data-a="reg">הצטרפות</button>`;
+const pendView=()=>`<div class="card" style="margin-top:12px"><h2 style="margin:0 0 6px">תודה${me&&me.name?", "+esc(me.name):""}!</h2><p>הבקשה שלך נשלחה לרכזת. ברגע שהיא תאשר, תוכל/י לראות בקשות ולהסיע.</p><button class="btn block" data-a="retry">בדיקה מחדש</button></div>`;
+
+function render(){
+  const V={load:()=>`<div class="empty">טוען…</div>`,
+   setup:()=>`<div class="card"><b>חסרה כתובת השרת</b><p>ב-index.html, בשורה הראשונה בסקריפט, הדבק/י את כתובת ה-Web App שמסתיימת ב-/exec.</p></div>`,
+   err:()=>`<div class="card"><b>אין חיבור לשרת</b><p class="meta">בדוק/י את החיבור לאינטרנט.</p><button class="btn block" data-a="retry">נסה שוב</button></div>`,
+   reg:regView,pending:pendView,app:()=>({req:tabReq,off:tabOff,new:tabNew})[st.tab]()+`<p class="demo">${esc(me.name)} · ${esc(me.garden||"רכזת")} · <button class="chip" data-a="logout">יציאה</button></p>`};
+  $("#app").innerHTML=V[st.view]();
+  $("#sub").textContent=st.view==="app"&&me?`שלום ${me.name}`:"הסעות לגן";
+  const ic=p=>`<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  const tabs=[["req","בקשות",ic('<path d="M4 6h16M4 12h16M4 18h10"/>')],["new","בקשה חדשה",ic('<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>')],["off","נוסעים קבוע",ic('<path d="M3 15l2-6h14l2 6v4H3zM7 19v2M17 19v2"/>')]];
+  $("#nav").innerHTML=st.view==="app"?tabs.map(t=>`<button data-t="${t[0]}" ${st.tab===t[0]?'aria-current="true"':""}>${t[2]}${t[1]}</button>`).join(""):"";
+}
+
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("button");if(!b)return;
+  const d=b.dataset,v=i=>$("#"+i).value.trim();
+  if(d.t){st.tab=d.t;render();scrollTo(0,0);return}
+  if(d.g){st.garden=d.g;render();return}
+  if(d.a==="open"){st.open=!st.open;render();return}
+  if(d.a==="retry"){view("load");load();return}
+  if(d.a==="logout"){store.del(KN);KEY="";me=null;view("reg");return}
+  if(d.remind){const r=data.requests.find(x=>x.id==d.remind);
+    const t=`היי ${r.taken}, תזכורת קטנה: ${label(r.date)} ב-${r.time} (${r.dir}) ${r.garden}, ${r.area}, ${r.kids} ילדים. ${r.note?r.note+". ":""}תודה רבה על העזרה!`;
+    window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank","noopener");return}
+  b.disabled=true;
+  try{
+    if(d.take){const r=await call({action:"take",id:d.take});toast(r.error==="already_taken"?"מישהו כבר לקח את ההסעה":r.ok?"תודה! הבקשה שובצה אליך":"משהו השתבש");await load();return}
+    if(d.un){await call({action:"untake",id:d.un});toast("השיבוץ בוטל");await load();return}
+    if(d.a==="send"){
+      if(!v("area")){toast("חסר מיקום: שכונה או רחוב");$("#area").focus();b.disabled=false;return}
+      const r=await call({action:"add",row:{date:iso($("#day").selectedIndex),time:v("time"),dir:v("dir"),garden:v("garden"),area:v("area").slice(0,60),kids:+v("kids")||1,note:v("nt").slice(0,200),reason:v("reason"),hide_details:$("#hide").checked,urgent:$("#urg").checked}});
+      if(r.ok){st.tab="req";toast("הבקשה נשלחה לקהילה");await load()}else{toast("השליחה נכשלה, נסה/י שוב");b.disabled=false}return}
+    if(d.a==="reg"){
+      if(!v("rn")||!/^[0-9+\-\s]{9,15}$/.test(v("rp"))){toast("חסר שם או מספר טלפון תקין");b.disabled=false;return}
+      if(!$("#rok").checked){toast("צריך לאשר את השימוש במידע");b.disabled=false;return}
+      const r=await call({action:"register",name:v("rn"),phone:v("rp"),email:v("re"),code:v("rc")});
+      const err={bad_code:"קוד ההצטרפות שגוי. אפשר לבקש אותו מהגננת או מוועד ההורים",missing_fields:"חסר שם או טלפון תקין",exists:"המספר הזה כבר רשום. פנה/י לרכזת"};
+      if(r.error){toast(err[r.error]||"ההרשמה נכשלה");b.disabled=false;return}
+      KEY=r.key;store.set(KN,KEY);me={name:v("rn")};view("pending");return}
+  }catch(x){toast("אין חיבור לשרת, נסה/י שוב");b.disabled=false}
+});
+
+load();
+if("serviceWorker"in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
